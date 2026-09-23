@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes" />
+  <title>DSTerminal · Defensive Security Terminal</title>
+  <!-- Font Awesome 6 (free) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    /* ---------- reset & base ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    }
+    body {
+      background: #0b0e14;
+      color: #e3e8f0;
+      line-height: 1.6;
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+    a {
+      color: #00d4ff;
+      text-decoration: none;
+    }
+    a:hover {
+      color: #7ae9ff;
+    }
+
+    /* ---------- cyber grid background (cinematic) ---------- */
+    .cyber-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        linear-gradient(rgba(0, 212, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: -1;
+    }
+    .cyber-bg::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(0deg, rgba(0, 212, 255, 0.02) 0px, rgba(0, 212, 255, 0.02) 2px, transparent 2px, transparent 6px);
+      pointer-events: none;
+    }
+
+    /* ---------- navbar ---------- */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 5%;
+      background: rgba(11, 14, 20, 0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(0, 212, 255, 0.12);
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      flex-wrap: wrap;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .logo i {
+      color: #00d4ff;
+      font-size: 2rem;
+    }
+    .logo span {
+      background: linear-gradient(135deg, #00d4ff, #7ae9ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* desktop nav */
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      font-weight: 500;
+      align-items: center;
+    }
+    .nav-links a {
+      color: #b0c4de;
+      transition: 0.2s;
+      border-bottom: 2px solid transparent;
+      padding-bottom: 4px;
+    }
+    .nav-links a:hover {
+      color: #fff;
+      border-bottom-color: #00d4ff;
+    }
+    .nav-cta {
+      background: #00d4ff;
+      color: #0b0e14 !important;
+      padding: 0.4rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      border-bottom: none !important;
+    }
+    .nav-cta:hover {
+      background: #7ae9ff;
+      color: #0b0e14 !important;
+    }
+
+    /* hamburger (mobile) */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 0.3rem;
+      background: transparent;
+      border: none;
+      z-index: 1001;
+      position: relative;
+    }
+    .hamburger span {
+      display: block;
+      width: 28px;
+      height: 2.5px;
+      background: #e3e8f0;
+      border-radius: 4px;
+      transition: 0.3s;
+    }
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    /* ---------- LEFT SLIDING DRAWER (mobile) ---------- */
+    .nav-drawer {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100%;
+      background: rgba(11, 14, 20, 0.97);
+      backdrop-filter: blur(16px);
+      border-right: 1px solid rgba(0, 212, 255, 0.15);
+      padding: 5rem 2rem 2rem;
+      transition: left 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+      box-shadow: 4px 0 30px rgba(0, 0, 0, 0.6);
+    }
+    .nav-drawer.open {
+      left: 0;
+    }
+    .nav-drawer a {
+      color: #b0c4de;
+      font-size: 1.2rem;
+      font-weight: 500;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .nav-drawer a:hover {
+      color: #fff;
+      padding-left: 0.4rem;
+      border-bottom-color: #00d4ff;
+    }
+    .nav-drawer .nav-cta-drawer {
+      background: #00d4ff;
+      color: #0b0e14 !important;
+      padding: 0.6rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      border: none;
+      justify-content: center;
+      margin-top: 0.8rem;
+    }
+    .nav-drawer .nav-cta-drawer:hover {
+      background: #7ae9ff;
+      padding-left: 1.2rem;
+    }
+
+    /* overlay behind drawer */
+    .drawer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ---------- hero (with auto-type) ---------- */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 4rem 1.5rem 2.5rem;
+      background: radial-gradient(circle at 30% 20%, rgba(0, 212, 255, 0.07) 0%, transparent 60%);
+      position: relative;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 7vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      max-width: 950px;
+    }
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, #00d4ff, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero .subhead {
+      font-size: 1.25rem;
+      color: #9aaec9;
+      max-width: 720px;
+      margin: 1.2rem auto 1.8rem;
+      min-height: 3.2rem;
+    }
+    .type-wrapper {
+      display: inline-flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.2rem 0.6rem;
+      font-weight: 500;
+      font-size: 1.1rem;
+      background: rgba(0, 212, 255, 0.04);
+      padding: 0.5rem 1.8rem;
+      border-radius: 60px;
+      border: 1px solid rgba(0, 212, 255, 0.1);
+      backdrop-filter: blur(4px);
+      margin-bottom: 1.8rem;
+    }
+    .type-wrapper .tag {
+      display: inline-block;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .type-wrapper .tag.show {
+      opacity: 1;
+    }
+    .type-wrapper .tag-0 { color: #00d4ff; }
+    .type-wrapper .tag-1 { color: #f472b6; }
+    .type-wrapper .tag-2 { color: #34d399; }
+    .type-wrapper .tag-3 { color: #fbbf24; }
+    .type-wrapper .tag-4 { color: #a78bfa; }
+    .type-wrapper .tag-5 { color: #fb923c; }
+    .type-wrapper .tag-6 { color: #60a5fa; }
+    .type-wrapper .tag-7 { color: #f87171; }
+
+    .hero-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+    .btn {
+      padding: 0.8rem 2.2rem;
+      border-radius: 60px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: #e3e8f0;
+      border: 1px solid #2a3a4e;
+      cursor: pointer;
+      transition: 0.25s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1rem;
+    }
+    .btn-primary {
+      background: #00d4ff;
+      color: #0b0e14;
+      border: 1px solid #00d4ff;
+    }
+    .btn-primary:hover {
+      background: #7ae9ff;
+      border-color: #7ae9ff;
+      transform: scale(1.02);
+    }
+    .btn-outline:hover {
+      border-color: #00d4ff;
+      background: rgba(0, 212, 255, 0.05);
+    }
+
+    /* ---------- terminal ---------- */
+    .terminal-section {
+      max-width: 1100px;
+      margin: 0 auto 3rem;
+      padding: 0 1.5rem;
+    }
+    .terminal-window {
+      background: #0f131c;
+      border-radius: 16px;
+      border: 1px solid #1e2a3a;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+    }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.8rem 1.2rem;
+      background: #151e2a;
+      border-bottom: 1px solid #1e2a3a;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+    .terminal-body {
+      padding: 1.5rem;
+      min-height: 240px;
+      background: #0b0e14;
+      font-family: 'Fira Code', 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .terminal-body .prompt { color: #00d4ff; }
+    .terminal-body .cmd { color: #f8f8f2; }
+    .terminal-body .output { color: #a6b8d9; }
+    .terminal-body .highlight-output { color: #7ae9ff; font-weight: 500; }
+    .terminal-input-line {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .terminal-input-line input {
+      flex: 1;
+      background: #0f131c;
+      border: 1px solid #1e2a3a;
+      border-radius: 40px;
+      padding: 0.6rem 1.2rem;
+      color: #e3e8f0;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      outline: none;
+      min-width: 140px;
+    }
+    .terminal-input-line input:focus { border-color: #00d4ff; }
+    .terminal-input-line button {
+      background: #1e2a3a;
+      border: none;
+      color: #e3e8f0;
+      padding: 0.6rem 1.6rem;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .terminal-input-line button:hover { background: #00d4ff; color: #0b0e14; }
+
+    /* ---------- features ---------- */
+    .section-title {
+      text-align: center;
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin: 4rem 0 2rem;
+    }
+    .section-title i { color: #00d4ff; margin-right: 0.5rem; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    .feature-card {
+      background: #111824;
+      padding: 2rem 1.5rem;
+      border-radius: 20px;
+      border: 1px solid #1e2a3a;
+      transition: 0.3s;
+      text-align: center;
+    }
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: #00d4ff;
+      box-shadow: 0 10px 30px rgba(0, 212, 255, 0.08);
+    }
+    .feature-card i { font-size: 2.8rem; color: #00d4ff; margin-bottom: 1rem; }
+    .feature-card h3 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+    .feature-card p { color: #9aaec9; font-size: 0.95rem; }
+
+    /* ---------- about ---------- */
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      align-items: center;
+    }
+    .demo-grid .text-block h2 { font-size: 2rem; margin-bottom: 1rem; }
+    .demo-grid .text-block p { color: #9aaec9; margin-bottom: 1.2rem; }
+    .demo-grid .img-placeholder {
+      background: #111824;
+      border-radius: 24px;
+      padding: 2rem;
+      text-align: center;
+      border: 1px solid #1e2a3a;
+      aspect-ratio: 4/3;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .demo-grid .img-placeholder i { font-size: 4rem; color: #00d4ff; margin-bottom: 1rem; }
+
+    /* ---------- download ---------- */
+    .download-section {
+      background: #111824;
+      padding: 3rem 1.5rem;
+      margin: 3rem 0;
+      border-top: 1px solid #1e2a3a;
+      border-bottom: 1px solid #1e2a3a;
+    }
+    .download-cards {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .download-item {
+      background: #0b0e14;
+      padding: 1.5rem 2.2rem;
+      border-radius: 16px;
+      border: 1px solid #1e2a3a;
+      min-width: 130px;
+      text-align: center;
+      transition: 0.2s;
+    }
+    .download-item:hover { border-color: #00d4ff; }
+    .download-item i { font-size: 2.4rem; color: #00d4ff; }
+    .download-item .os { font-weight: 600; margin: 0.5rem 0 0.2rem; }
+    .download-item .ver { color: #7a8aa3; font-size: 0.85rem; }
+
+    /* ---------- footer ---------- */
+    .footer {
+      text-align: center;
+      padding: 3rem 1.5rem 2rem;
+      border-top: 1px solid #1e2a3a;
+      color: #6a7d9e;
+      font-size: 0.95rem;
+    }
+    .footer a { color: #7a8aa3; margin: 0 0.8rem; }
+    .footer a:hover { color: #00d4ff; }
+
+    /* ---------- responsive ---------- */
+    @media (max-width: 820px) {
+      .nav-links {
+        display: none;
+      }
+      .hamburger {
+        display: flex;
+      }
+      .demo-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 1.9rem; }
+      .hero .subhead { font-size: 1rem; }
+      .type-wrapper { font-size: 0.9rem; padding: 0.4rem 1rem; flex-wrap: wrap; }
+      .terminal-body { font-size: 0.75rem; padding: 1rem; }
+      .terminal-input-line { flex-direction: column; align-items: stretch; }
+      .terminal-input-line input { width: 100%; }
+      .btn { padding: 0.6rem 1.4rem; font-size: 0.9rem; }
+      .nav-drawer { width: 250px; left: -250px; padding: 4.5rem 1.5rem 1.5rem; }
+    }
+    @media (max-width: 480px) {
+      .feature-card { padding: 1.5rem 1rem; }
+      .download-item { min-width: 100px; padding: 1rem 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="cyber-bg"></div>
+
+  <!-- LEFT SLIDING DRAWER (mobile) -->
+  <div class="nav-drawer" id="navDrawer">
+    <a href="#features"><i class="fas fa-microchip"></i> Features</a>
+    <a href="#demo"><i class="fas fa-terminal"></i> Demo</a>
+    <a href="#download"><i class="fas fa-download"></i> Download</a>
+    <a href="#docs"><i class="fas fa-book-open"></i> Docs</a>
+    <a href="#contact" class="nav-cta-drawer"><i class="fas fa-shield-alt"></i> Try Now</a>
+  </div>
+  <!-- overlay -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="logo"><i class="fas fa-terminal"></i><span>DSTerminal</span></div>
+    <!-- desktop links -->
+    <div class="nav-links" id="navLinks">
+      <a href="#features">Features</a>
+      <a href="#demo">Demo</a>
+      <a href="#download">Download</a>
+      <a href="#docs">Docs</a>
+      <a href="#contact" class="nav-cta"><i class="fas fa-shield-alt"></i> Try Now</a>
+    </div>
+    <!-- hamburger -->
+    <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <h1>Defensive <span class="highlight">Security Terminal</span> for Everyone</h1>
+    <div class="subhead">
+      <span style="color:#9aaec9;">Empowering </span>
+      <span class="type-wrapper" id="typeWrapper"></span>
+    </div>
+    <div class="hero-btns">
+      <a href="#demo" class="btn btn-primary"><i class="fas fa-play"></i> Interactive Demo</a>
+      <a href="#download" class="btn btn-outline"><i class="fas fa-download"></i> Download v3.1.113</a>
+    </div>
+  </section>
+
+  <!-- TERMINAL -->
+  <section class="terminal-section" id="demo">
+    <div class="terminal-window">
+      <div class="terminal-header">
+        <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+        <span style="margin-left: 0.8rem; color: #9aaec9; font-size: 0.85rem;">dsterminal@cyberlab:~</span>
+      </div>
+      <div class="terminal-body" id="terminalOutput">
+        <span class="prompt">$</span> <span class="cmd">dsterminal --status</span>
+        <span class="output">DSTerminal v2.1.0 · all modules active · 0 threats detected</span>
+        <span class="output">➜ type a command below (try: scan, monitor, analyze, help)</span>
+      </div>
+      <div class="terminal-body" style="border-top: 1px solid #1e2a3a; padding-top: 0.8rem;">
+        <div class="terminal-input-line">
+          <span class="prompt">❯</span>
+          <input type="text" id="terminalInput" placeholder="enter command..." autofocus />
+          <button id="terminalSend"><i class="fas fa-arrow-right"></i> Run</button>
+        </div>
+        <div style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+          <span style="background: #1a2433; padding: 0.2rem 1rem; border-radius: 30px; font-size: 0.75rem; color: #7a8aa3; cursor:pointer;">help</span>
+          <span style="background: #1a2433; padding: 0.2rem 1rem; border-radius: 30px; font-size: 0.75rem; color: #7a8aa3; cursor:pointer;">scan 192.168.1.0/24</span>
+          <span style="background: #1a2433; padding: 0.2rem 1rem; border-radius: 30px; font-size: 0.75rem; color: #7a8aa3; cursor:pointer;">monitor --interface eth0</span>
+          <span style="background: #1a2433; padding: 0.2rem 1rem; border-radius: 30px; font-size: 0.75rem; color: #7a8aa3; cursor:pointer;">analyze /var/log/syslog</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <h2 class="section-title" id="features"><i class="fas fa-microchip"></i> Core Capabilities</h2>
+  <div class="features-grid">
+    <div class="feature-card"><i class="fas fa-search"></i><h3>Vulnerability Scan</h3><p>Identify open ports, weak services, and CVEs across networks.</p></div>
+    <div class="feature-card"><i class="fas fa-eye"></i><h3>Network Monitor</h3><p>Real-time traffic analysis with anomaly detection and alerts.</p></div>
+    <div class="feature-card"><i class="fas fa-file-alt"></i><h3>Forensic Analysis</h3><p>Parse logs, memory dumps, and disk images for incident response.</p></div>
+    <div class="feature-card"><i class="fas fa-chart-line"></i><h3>Reporting</h3><p>Export PDF/HTML reports with actionable insights and remediation steps.</p></div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="demo-grid" id="docs">
+    <div class="text-block">
+      <h2><i class="fas fa-laptop-code" style="color:#00d4ff;"></i> Built for cyber resilience</h2>
+      <p>DSTerminal integrates Nmap, Wireshark, Metasploit, and custom modules into a single CLI. First Malawian-focused cybersecurity tool for government, education, and enterprise.</p>
+      <p><i class="fas fa-check-circle" style="color:#27c93f;"></i> Offline-capable · cross-platform (Win/macOS/Linux) · open-core</p>
+      <a href="#" class="btn btn-primary" style="margin-top: 0.5rem;"><i class="fas fa-book-open"></i> Read the docs</a>
+    </div>
+    <div class="img-placeholder">
+      <i class="fas fa-shield-halved"></i>
+      <p style="color:#9aaec9; margin-top: 0.5rem;">Interactive sandbox demo</p>
+      <span style="background: #0b0e14; padding: 0.3rem 1.2rem; border-radius: 30px; border: 1px solid #2a3a4e; font-size: 0.8rem;">try it above ↑</span>
+    </div>
+  </div>
+
+  <!-- DOWNLOAD -->
+  <section class="download-section" id="download">
+    <h2 style="text-align: center; font-size: 2rem; margin-bottom: 2rem;"><i class="fas fa-download" style="color:#00d4ff;"></i> Get DSTerminal</h2>
+    <div class="download-cards">
+      <div class="download-item"><i class="fab fa-windows"></i><div class="os">Windows</div><div class="ver">.exe · v3.1.113</div><a href="https://github.com/Stark-Expo-Tech-Exchange/DSTerminal_releases_latest/releases/download/v3.1.113/DSTerminal_Installer_2026_v3.1.113.exe" style="font-size:0.85rem;">download</a></div>
+      <div class="download-item"><i class="fab fa-apple"></i><div class="os">macOS</div><div class="ver">.dmg · v3.1.113</div><a href="https://github.com/Stark-Expo-Tech-Exchange/DSTerminal_releases_latest/releases/download/v3.1.113/DSTerminal_macOS_v3.1.113.dmg" style="font-size:0.85rem;">download</a></div>
+      <div class="download-item"><i class="fab fa-linux"></i><div class="os">Linux</div><div class="ver">.deb / tar.gz</div><a href="https://github.com/Stark-Expo-Tech-Exchange/DSTerminal-Pro/releases/download/v3.1.113/dsterminal_2.1.327_amd64.deb" style="font-size:0.85rem;">download</a></div>
+      <div class="download-item"><i class="fas fa-code-branch"></i><div class="os">Open Source</div><div class="ver">GitHub</div><a href="https://github.com/Stark-Expo-Tech-Exchange/DSTerminal" style="font-size:0.85rem;">view repo</a></div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer" id="contact">
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1.5rem;">
+      <a href="#"><i class="fab fa-github"></i> GitHub</a>
+      <a href="#"><i class="fab fa-twitter"></i> Twitter</a>
+      <a href="#"><i class="fas fa-envelope"></i> support@dsterminal.mw</a>
+      <a href="#"><i class="fas fa-shield"></i> Security</a>
+    </div>
+    <p>© 2026 DSTerminal · built for cyber resilience · Malawi</p>
+    <p style="font-size: 0.8rem; margin-top: 0.5rem; color: #4a5a7a;">v2.1.0 · all-in-one defensive terminal</p>
+  </footer>
+
+  <script>
+    (function() {
+      // ---------- AUTO-TYPING HERO ----------
+      const keywords = [
+        { text: 'Blue Teams', cls: 'tag-0' },
+        { text: 'IT/ICT Students', cls: 'tag-1' },
+        { text: 'Computer Science', cls: 'tag-2' },
+        { text: 'Cybersecurity', cls: 'tag-3' },
+        { text: 'IT Professionals', cls: 'tag-4' },
+        { text: 'Business Enterprises', cls: 'tag-5' },
+        { text: 'Gov Agencies', cls: 'tag-6' },
+        { text: 'Private Enterprise', cls: 'tag-7' }
+      ];
+
+      const wrapper = document.getElementById('typeWrapper');
+      let currentIndex = 0;
+      let isDeleting = false;
+      let timer = null;
+      let activeTag = null;
+
+      function renderCurrent() {
+        wrapper.innerHTML = '';
+        const kw = keywords[currentIndex];
+        const span = document.createElement('span');
+        span.className = `tag show ${kw.cls}`;
+        span.textContent = kw.text;
+        wrapper.appendChild(span);
+        activeTag = span;
+      }
+
+      function typeCycle() {
+        if (!activeTag) { renderCurrent(); return; }
+        const fullText = keywords[currentIndex].text;
+        const currentText = activeTag.textContent || '';
+
+        if (!isDeleting) {
+          if (currentText.length < fullText.length) {
+            activeTag.textContent = fullText.substring(0, currentText.length + 1);
+            timer = setTimeout(typeCycle, 90 + Math.random() * 60);
+          } else {
+            timer = setTimeout(() => { isDeleting = true; typeCycle(); }, 1200);
+          }
+        } else {
+          if (currentText.length > 0) {
+            activeTag.textContent = currentText.substring(0, currentText.length - 1);
+            timer = setTimeout(typeCycle, 50 + Math.random() * 40);
+          } else {
+            isDeleting = false;
+            currentIndex = (currentIndex + 1) % keywords.length;
+            renderCurrent();
+            timer = setTimeout(typeCycle, 200);
+          }
+        }
+      }
+
+      setTimeout(() => { renderCurrent(); timer = setTimeout(typeCycle, 300); }, 400);
+
+      // ---------- TERMINAL ----------
+      const output = document.getElementById('terminalOutput');
+      const input = document.getElementById('terminalInput');
+      const sendBtn = document.getElementById('terminalSend');
+
+      function processCommand(cmd) {
+        const lower = cmd.trim().toLowerCase();
+        if (!lower) return '';
+        if (lower === 'help') {
+          return `<span class="highlight-output">Available commands:</span> 
+ scan [target]   - vulnerability scan
+ monitor [iface] - network monitoring
+ analyze [file]  - forensic log analysis
+ report          - generate summary
+ status          - system health
+ help            - this message`;
+        }
+        if (lower.startsWith('scan')) {
+          const target = lower.replace('scan', '').trim() || '192.168.1.0/24';
+          return `<span class="highlight-output">🛡️ Scanning ${target} ...</span>
+ <span class="output">[+] 8 hosts up · 22 open ports · 3 services identified</span>
+ <span class="output">⚠️  CVE-2025-1234 detected on port 443 · patch recommended</span>`;
+        }
+        if (lower.startsWith('monitor')) {
+          const iface = lower.replace('monitor', '').trim() || 'eth0';
+          return `<span class="highlight-output">📡 Monitoring ${iface} (live)</span>
+ <span class="output">▶ 1.2 Gbps · 342 packets/s · 0 anomalies</span>
+ <span class="output">▶ ARP spoofing attempt blocked (MAC 00:1A:2B:3C:4D:5E)</span>`;
+        }
+        if (lower.startsWith('analyze')) {
+          const file = lower.replace('analyze', '').trim() || '/var/log/auth.log';
+          return `<span class="highlight-output">🔍 Analyzing ${file} ...</span>
+ <span class="output">▶ 12,403 lines · 4 failed SSH attempts · 2 successful</span>
+ <span class="output">▶ Suspicious pattern: repeated root login from 10.0.0.45</span>`;
+        }
+        if (lower === 'report') {
+          return `<span class="highlight-output">📄 Generating security report ...</span>
+ <span class="output">✅ PDF report created: DSTerminal_Report_2026-06-16.pdf</span>
+ <span class="output">🔗 3 high-severity items · 7 medium · 12 low</span>`;
+        }
+        if (lower === 'status') {
+          return `<span class="highlight-output">✅ DSTerminal v2.1.0 · uptime 14d 7h</span>
+ <span class="output">🟢 all modules active · 0 threats · 2 updates available</span>`;
+        }
+        return `<span style="color:#ff6b6b;">⛔ command not recognized: '${cmd}'</span>
+ <span class="output">type 'help' for available commands</span>`;
+      }
+
+      function appendOutput(html) {
+        const lines = output.innerHTML.split('\n');
+        if (lines.length > 18) output.innerHTML = lines.slice(-12).join('\n');
+        output.innerHTML += `\n<span class="prompt">$</span> <span class="cmd">${input.value.trim()}</span>\n` + html;
+        output.scrollTop = output.scrollHeight;
+      }
+
+      function handleCommand() {
+        const raw = input.value.trim();
+        if (!raw) return;
+        appendOutput(processCommand(raw));
+        input.value = '';
+        input.focus();
+      }
+
+      sendBtn.addEventListener('click', handleCommand);
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleCommand(); } });
+      document.querySelectorAll('.terminal-input-line + div span').forEach(el => {
+        el.addEventListener('click', function() { input.value = this.innerText; handleCommand(); });
+      });
+      input.focus();
+
+      // ---------- LEFT SLIDING DRAWER (hamburger) ----------
+      const hamburger = document.getElementById('hamburgerBtn');
+      const drawer = document.getElementById('navDrawer');
+      const overlay = document.getElementById('drawerOverlay');
+
+      function toggleDrawer(open) {
+        hamburger.classList.toggle('active', open);
+        drawer.classList.toggle('open', open);
+        overlay.classList.toggle('active', open);
+        document.body.style.overflow = open ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isOpen = drawer.classList.contains('open');
+        toggleDrawer(!isOpen);
+      });
+
+      overlay.addEventListener('click', function() { toggleDrawer(false); });
+
+      // close drawer on link click
+      drawer.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', function() { toggleDrawer(false); });
+      });
+
+      // close on Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && drawer.classList.contains('open')) toggleDrawer(false);
+      });
+
+    })();
+  </script>
+</body>
+</html>
